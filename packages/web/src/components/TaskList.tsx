@@ -16,9 +16,16 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
   cancelled: '#616161',
 };
 
+const PRIORITY_ORDER: Record<Task['priority'], number> = {
+  low: 0,
+  medium: 1,
+  high: 2,
+  critical: 3,
+};
+
 export function TaskList({ tasks, filterStatus }: TaskListProps): React.ReactElement {
   const visible = filterStatus ? tasks.filter((t) => t.status === filterStatus) : tasks;
-  const sorted = [...visible].sort((a, b) => b.priority - a.priority);
+  const sorted = [...visible].sort((a, b) => PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority]);
 
   return (
     <ul className="task-list">
