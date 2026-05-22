@@ -29,7 +29,7 @@ export class InMemoryTaskRepository implements Repository<Task, TaskId> {
       id: `task_${Math.random().toString(36).slice(2, 11)}`,
       name: input.name,
       status: 'pending',
-      priority: input.priority ?? 5,
+      priority: input.priority ?? 'medium',
       payload: input.payload,
       metadata: input.metadata,
       createdAt: now,

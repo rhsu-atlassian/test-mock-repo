@@ -15,9 +15,16 @@ export type TaskStatus =
 
 /**
  * Priority for task scheduling.
- * Higher number = higher priority (1 = lowest, 10 = highest).
+ * Higher tier = higher priority.
  */
-export type Priority = number;
+export type Priority = 'low' | 'medium' | 'high' | 'critical';
+
+export const PRIORITY_ORDER: Readonly<Record<Priority, number>> = {
+  low: 0,
+  medium: 1,
+  high: 2,
+  critical: 3,
+};
 
 export interface TaskMetadata {
   readonly createdBy: string;

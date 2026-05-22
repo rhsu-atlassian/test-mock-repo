@@ -1,4 +1,4 @@
-import type { Task, ExecutionContext } from '@myco/types';
+import { PRIORITY_ORDER, type Task, type ExecutionContext } from '@myco/types';
 
 import type { InMemoryTaskRepository } from './repository';
 
@@ -23,7 +23,7 @@ export class Scheduler {
     // Sort: higher priority first, then older tasks first.
     const sorted = [...eligible].sort((a, b) => {
       if (a.priority !== b.priority) {
-        return b.priority - a.priority;
+        return PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority];
       }
       return a.createdAt.getTime() - b.createdAt.getTime();
     });

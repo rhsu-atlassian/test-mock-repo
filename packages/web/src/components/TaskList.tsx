@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { Task, TaskStatus } from '@myco/types';
+import { PRIORITY_ORDER, type Task, type TaskStatus } from '@myco/types';
 
 export interface TaskListProps {
   readonly tasks: ReadonlyArray<Task>;
@@ -18,7 +18,7 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
 
 export function TaskList({ tasks, filterStatus }: TaskListProps): React.ReactElement {
   const visible = filterStatus ? tasks.filter((t) => t.status === filterStatus) : tasks;
-  const sorted = [...visible].sort((a, b) => b.priority - a.priority);
+  const sorted = [...visible].sort((a, b) => PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority]);
 
   return (
     <ul className="task-list">
