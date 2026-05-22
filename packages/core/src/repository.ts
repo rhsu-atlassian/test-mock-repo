@@ -58,7 +58,7 @@ export class InMemoryTaskRepository implements Repository<Task, TaskId> {
 
   async delete(id: TaskId): Promise<void> {
     this.store.delete(id);
-  }
+  
 
   async findByStatus(status: Task['status']): Promise<ReadonlyArray<Task>> {
     return Array.from(this.store.values()).filter((t) => t.status === status);
