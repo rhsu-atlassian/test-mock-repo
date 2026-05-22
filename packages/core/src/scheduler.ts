@@ -1,13 +1,6 @@
-import type { Task, ExecutionContext } from '@myco/types';
+import { PRIORITY_ORDER, type Task, type ExecutionContext } from '@myco/types';
 
 import type { InMemoryTaskRepository } from './repository';
-
-const PRIORITY_ORDER: Record<Task['priority'], number> = {
-  low: 0,
-  medium: 1,
-  high: 2,
-  critical: 3,
-};
 
 /**
  * Scheduler decides which pending tasks should be picked up next.

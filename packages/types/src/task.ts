@@ -19,6 +19,13 @@ export type TaskStatus =
  */
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
 
+export const PRIORITY_ORDER: Readonly<Record<Priority, number>> = {
+  low: 0,
+  medium: 1,
+  high: 2,
+  critical: 3,
+};
+
 export interface TaskMetadata {
   readonly createdBy: string;
   readonly correlationId?: string;

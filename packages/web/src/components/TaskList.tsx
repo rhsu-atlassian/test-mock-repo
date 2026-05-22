@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { Task, TaskStatus } from '@myco/types';
+import { PRIORITY_ORDER, type Task, type TaskStatus } from '@myco/types';
 
 export interface TaskListProps {
   readonly tasks: ReadonlyArray<Task>;
@@ -14,13 +14,6 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
   failed: '#d32f2f',
   retrying: '#f57c00',
   cancelled: '#616161',
-};
-
-const PRIORITY_ORDER: Record<Task['priority'], number> = {
-  low: 0,
-  medium: 1,
-  high: 2,
-  critical: 3,
 };
 
 export function TaskList({ tasks, filterStatus }: TaskListProps): React.ReactElement {
