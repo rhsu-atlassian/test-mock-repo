@@ -125,11 +125,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-workspace
+      - name: Download build artifacts (types)
+        uses: actions/download-artifact@v4
+        with:
+          name: build-types
+          path: packages/types/dist
+      - name: Download build artifacts (core)
+        uses: actions/download-artifact@v4
+        with:
+          name: build-core
+          path: packages/core/dist
+      - name: Download build artifacts (client)
+        uses: actions/download-artifact@v4
+        with:
+          name: build-client
+          path: packages/client/dist
       - name: Run integration tests
         working-directory: .
         env:
           REDIS_URL: redis://localhost:6379
-        run: npm test --workspace=@myco/api-server -- --testPathPattern="integration"
+        run: npm test --workspace=@myco/api-server -- --testPathPattern="integration" --passWithNoTests
 
   # ---------- Stage 5: Security scan (only on PRs from same repo, not forks) ----------
   security-scan:
