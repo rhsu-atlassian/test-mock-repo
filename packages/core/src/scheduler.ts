@@ -23,7 +23,7 @@ export class Scheduler {
     // Sort: higher priority first, then older tasks first.
     const sorted = [...eligible].sort((a, b) => {
       if (a.priority !== b.priority) {
-        return b.priority - a.priority;
+        return a.priority - b.priority;
       }
       return a.createdAt.getTime() - b.createdAt.getTime();
     });
