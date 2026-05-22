@@ -17,21 +17,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ---------- Stage 1: Lint (fast, fails fast) ----------
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-workspace
-      - name: Run ESLint
-        working-directory: .
-        run: npm run lint
-
-  # ---------- Stage 2: Build (matrix across packages) ----------
+  # ---------- Stage 1: Build (matrix across packages) ----------
   build:
     name: Build
-    needs: [lint]
+    needs: []
     strategy:
       fail-fast: false
       matrix:
@@ -39,6 +28,33 @@ jobs:
     uses: ./.github/workflows/reusable-build.yml
     with:
       package: ${{ matrix.package }}
+
+  # ---------- Stage 2: Lint (runs after build so dist/ exists for type-checking) ----------
+  lint:
+    name: Lint
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-workspace
+      - name: Download build artifacts (types)
+        uses: actions/download-artifact@v4
+        with:
+          name: build-types
+          path: packages/types/dist
+      - name: Download build artifacts (core)
+        uses: actions/download-artifact@v4
+        with:
+          name: build-core
+          path: packages/core/dist
+      - name: Download build artifacts (client)
+        uses: actions/download-artifact@v4
+        with:
+          name: build-client
+          path: packages/client/dist
+      - name: Run ESLint
+        working-directory: .
+        run: npm run lint
 
   # ---------- Stage 3: Unit tests (matrix across packages × node versions) ----------
   test-unit:
@@ -101,14 +117,14 @@ jobs:
   # ---------- Final gate ----------
   ci-success:
     name: CI Success
-    needs: [lint, build, test-unit]
+    needs: [build, lint, test-unit]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Check matrix results
         run: |
-          if [ "${{ needs.lint.result }}" != "success" ] || \
-             [ "${{ needs.build.result }}" != "success" ] || \
+          if [ "${{ needs.build.result }}" != "success" ] || \
+             [ "${{ needs.lint.result }}" != "success" ] || \
              [ "${{ needs.test-unit.result }}" != "success" ]; then
             echo "One or more required jobs failed"
             exit 1
