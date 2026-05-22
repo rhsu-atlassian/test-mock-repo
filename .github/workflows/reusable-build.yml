@@ -1,0 +1,47 @@
+name: Reusable Build
+
+on:
+  workflow_call:
+    inputs:
+      package:
+        description: 'Workspace package name (e.g. types, core, api-server)'
+        required: true
+        type: string
+      node-version:
+        description: 'Node.js version'
+        required: false
+        default: '20'
+        type: string
+      strict:
+        description: 'Fail on any type warnings (treats noUnusedLocals as fatal)'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  build:
+    name: Build ${{ inputs.package }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Typecheck
+        working-directory: .
+        run: npm run typecheck --workspace=@myco/${{ inputs.package }}
+
+      - name: Build
+        working-directory: .
+        run: npm run build --workspace=@myco/${{ inputs.package }}
+
+      - name: Upload build artifacts
+        if: ${{ inputs.strict }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ inputs.package }}
+          path: packages/${{ inputs.package }}/dist
+          retention-days: 1

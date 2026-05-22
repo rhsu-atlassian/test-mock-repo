@@ -1,0 +1,40 @@
+name: Reusable Test
+
+on:
+  workflow_call:
+    inputs:
+      package:
+        required: true
+        type: string
+      node-version:
+        required: false
+        default: '20'
+        type: string
+      test-pattern:
+        description: 'Optional jest --testPathPattern'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  test:
+    name: Test ${{ inputs.package }} (node ${{ inputs.node-version }})
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Run tests
+        working-directory: .
+        env:
+          CI: true
+        run: |
+          if [ -n "${{ inputs.test-pattern }}" ]; then
+            npm test --workspace=@myco/${{ inputs.package }} -- --testPathPattern="${{ inputs.test-pattern }}"
+          else
+            npm test --workspace=@myco/${{ inputs.package }}
+          fi

@@ -1,0 +1,34 @@
+{
+  "name": "myco-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Task & workflow orchestration platform (mock monorepo for Copilot stress-testing)",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint \"packages/*/src/**/*.{ts,tsx}\"",
+    "lint:fix": "eslint \"packages/*/src/**/*.{ts,tsx}\" --fix",
+    "test": "npm run test --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present",
+    "inject-errors": "ts-node scripts/inject-errors.ts",
+    "reset-errors": "ts-node scripts/reset-errors.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.29.1",
+    "prettier": "^3.2.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

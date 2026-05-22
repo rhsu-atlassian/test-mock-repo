@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      run-integration:
+        description: 'Run integration tests'
+        type: boolean
+        default: false
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------- Stage 1: Lint (fast, fails fast) ----------
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-workspace
+      - name: Run ESLint
+        working-directory: .
+        run: npm run lint
+
+  # ---------- Stage 2: Build (matrix across packages) ----------
+  build:
+    name: Build
+    needs: [lint]
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [types, core, client, api-server, worker, web]
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      package: ${{ matrix.package }}
+
+  # ---------- Stage 3: Unit tests (matrix across packages × node versions) ----------
+  test-unit:
+    name: Unit Tests
+    needs: [build]
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [api-server, worker]
+        node-version: ['18', '20', '22']
+        exclude:
+          - package: api-server
+            node-version: '18'
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      package: ${{ matrix.package }}
+      node-version: ${{ matrix.node-version }}
+
+  # ---------- Stage 4: Integration tests (conditional) ----------
+  test-integration:
+    name: Integration Tests
+    needs: [test-unit]
+    if: |
+      github.event_name == 'workflow_dispatch' && inputs.run-integration == true ||
+      github.event_name == 'pull_request' ||
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-workspace
+      - name: Run integration tests
+        working-directory: .
+        env:
+          REDIS_URL: redis://localhost:6379
+        run: npm test --workspace=@myco/api-server -- --testPathPattern="integration"
+
+  # ---------- Stage 5: Security scan (only on PRs from same repo, not forks) ----------
+  security-scan:
+    name: Security Scan
+    needs: [build]
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-workspace
+      - name: Audit dependencies
+        working-directory: .
+        run: npm audit --audit-level=high
+      - name: Publish results
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: echo "Would publish security results"
+
+  # ---------- Final gate ----------
+  ci-success:
+    name: CI Success
+    needs: [lint, build, test-unit]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check matrix results
+        run: |
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ] || \
+             [ "${{ needs.test-unit.result }}" != "success" ]; then
+            echo "One or more required jobs failed"
+            exit 1
+          fi
+          echo "All required jobs passed"

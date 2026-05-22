@@ -1,0 +1,79 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Deployment target'
+        type: choice
+        options:
+          - test
+          - staging
+          - production
+        required: true
+      dry-run:
+        description: 'Dry-run mode (no actual deploy)'
+        type: boolean
+        default: false
+
+jobs:
+  # Re-use the build for deployable packages.
+  build-deployables:
+    strategy:
+      matrix:
+        package: [api-server, worker, web]
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      package: ${{ matrix.package }}
+
+  deploy-test:
+    name: Deploy to Test
+    needs: [build-deployables]
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && inputs.target == 'test')
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy
+        if: ${{ !inputs.dry-run }}
+        run: echo "Deploying api-server, worker, web to TEST"
+      - name: Dry-run notice
+        if: ${{ inputs.dry-run }}
+        run: echo "[dry-run] Would deploy to test"
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [deploy-test]
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && inputs.target == 'staging')
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - run: echo "Deployed to staging"
+
+  smoke-tests:
+    name: Smoke Tests (Staging)
+    needs: [deploy-staging]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-workspace
+      - name: Run smoke tests
+        working-directory: .
+        run: echo "smoke tests would run here"
+
+  deploy-production:
+    name: Deploy to Production
+    needs: [smoke-tests]
+    if: |
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      !contains(github.event.head_commit.message, '[skip-deploy]')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - run: echo "Deployed to production"
