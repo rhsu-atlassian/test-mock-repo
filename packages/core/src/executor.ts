@@ -34,7 +34,7 @@ export class Executor {
       await this.transition(task, 'completed');
     } catch (err) {
       const error = err instanceof Error ? err.message : String(err);
-      if (task.retryCount < task.maxRetries) {
+      if (task.retryCount <= task.maxRetries) {
         await this.repo.update(task.id, {
           status: 'retrying',
           retryCount: task.retryCount + 1,
