@@ -17,17 +17,51 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ---------- Stage 1: Build (matrix across packages) ----------
+  # ---------- Stage 1: Build all packages (single job, uses project references for dep order) ----------
   build:
     name: Build
-    needs: []
-    strategy:
-      fail-fast: false
-      matrix:
-        package: [types, core, client, api-server, worker, web]
-    uses: ./.github/workflows/reusable-build.yml
-    with:
-      package: ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-workspace
+      - name: Build all packages (ordered via tsc -b)
+        run: npx tsc -b
+      - name: Upload build artifacts (types)
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-types
+          path: packages/types/dist
+          retention-days: 1
+      - name: Upload build artifacts (core)
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-core
+          path: packages/core/dist
+          retention-days: 1
+      - name: Upload build artifacts (client)
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-client
+          path: packages/client/dist
+          retention-days: 1
+      - name: Upload build artifacts (api-server)
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-api-server
+          path: packages/api-server/dist
+          retention-days: 1
+      - name: Upload build artifacts (worker)
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-worker
+          path: packages/worker/dist
+          retention-days: 1
+      - name: Upload build artifacts (web)
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-web
+          path: packages/web/dist
+          retention-days: 1
 
   # ---------- Stage 2: Lint (runs after build so dist/ exists for type-checking) ----------
   lint:
