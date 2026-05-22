@@ -1,7 +1,10 @@
 name: Deploy
 
 on:
-  push:
+  # Run only after CI succeeds on main (chained workflow)
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
     branches: [main]
   workflow_dispatch:
     inputs:
@@ -18,21 +21,44 @@ on:
         type: boolean
         default: false
 
+# Guard: every job must verify CI passed (for workflow_run) or it's a manual dispatch
 jobs:
-  # Re-use the build for deployable packages.
+  # Build all deployable packages in a single ordered job (project references handle dep graph)
   build-deployables:
-    strategy:
-      matrix:
-        package: [api-server, worker, web]
-    uses: ./.github/workflows/reusable-build.yml
-    with:
-      package: ${{ matrix.package }}
+    name: Build Deployables
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-workspace
+      - name: Build all packages (ordered via tsc -b)
+        run: npx tsc -b
+      - name: Upload build artifacts (api-server)
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-api-server
+          path: packages/api-server/dist
+          retention-days: 1
+      - name: Upload build artifacts (worker)
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-worker
+          path: packages/worker/dist
+          retention-days: 1
+      - name: Upload build artifacts (web)
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-web
+          path: packages/web/dist
+          retention-days: 1
 
   deploy-test:
     name: Deploy to Test
     needs: [build-deployables]
     if: |
-      github.event_name == 'push' ||
+      github.event_name == 'workflow_run' ||
       (github.event_name == 'workflow_dispatch' && inputs.target == 'test')
     runs-on: ubuntu-latest
     environment: test
@@ -49,7 +75,7 @@ jobs:
     name: Deploy to Staging
     needs: [deploy-test]
     if: |
-      github.event_name == 'push' ||
+      github.event_name == 'workflow_run' ||
       (github.event_name == 'workflow_dispatch' && inputs.target == 'staging')
     runs-on: ubuntu-latest
     environment: staging
@@ -71,8 +97,9 @@ jobs:
     name: Deploy to Production
     needs: [smoke-tests]
     if: |
-      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-      !contains(github.event.head_commit.message, '[skip-deploy]')
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      !contains(github.event.workflow_run.head_commit.message, '[skip-deploy]')
     runs-on: ubuntu-latest
     environment: production
     steps:
