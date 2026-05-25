@@ -17,11 +17,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
   const userId = req.header('x-user-id');
   const correlationId = req.header('x-correlation-id');
 
-  if (
-    tenantId === undefined || tenantId === '' ||
-    userId === undefined || userId === '' ||
-    correlationId === undefined || correlationId === ''
-  ) {
+  if (tenantId == null || userId == null || correlationId == null) {
     res.status(401).json({ error: 'Missing required auth headers' });
     return;
   }
