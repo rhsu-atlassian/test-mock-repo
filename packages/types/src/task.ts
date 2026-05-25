@@ -15,7 +15,7 @@ export type TaskStatus =
 
 /**
  * Priority for task scheduling.
- * Higher number = higher priority (1 = lowest, 10 = highest).
+ * Higher urgency = higher priority.
  */
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
 

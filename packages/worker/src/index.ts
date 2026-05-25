@@ -24,6 +24,7 @@ async function main(): Promise<void> {
     environment: (process.env.NODE_ENV as ExecutionContext['environment']) ?? 'development',
     startedAt: new Date(),
     timeoutMs: 60000,
+    featureFlags: [],
   };
 
   runner.start(context);
