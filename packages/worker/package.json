@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@myco/core": "*",
-    "@myco/types": "99.0.0"
+    "@myco/types": "*"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
