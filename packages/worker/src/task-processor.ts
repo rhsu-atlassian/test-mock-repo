@@ -33,7 +33,7 @@ export class TaskProcessor {
 
   async tick(context: ExecutionContext): Promise<void> {
     const batch = await this.scheduler.getNextBatch(context, this.options.batchSize);
-    Promise.all(batch.map((task) => this.executor.execute(task, context)));
+    await Promise.all(batch.map((task) => this.executor.execute(task, context)));
   }
 
   /**
