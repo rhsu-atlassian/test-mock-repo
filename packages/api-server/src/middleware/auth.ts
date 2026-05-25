@@ -33,6 +33,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
     environment: (process.env.NODE_ENV as ExecutionContext['environment']) ?? 'development',
     startedAt: new Date(),
     timeoutMs: 30000,
+    featureFlags: [],
   };
   next();
 }

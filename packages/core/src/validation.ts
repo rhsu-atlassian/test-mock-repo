@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const createTaskSchema = z.object({
   name: z.string().min(1).max(255),
-  priority: z.number().int().min(1).max(10).optional(),
+  priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
   payload: z.record(z.unknown()),
   metadata: z.object({
     createdBy: z.string().min(1),

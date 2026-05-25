@@ -10,6 +10,7 @@ const context: ExecutionContext = {
   environment: 'development',
   startedAt: new Date(),
   timeoutMs: 5000,
+  featureFlags: [],
 };
 
 describe('TaskProcessor', () => {
