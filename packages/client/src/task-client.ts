@@ -10,7 +10,7 @@ export class TaskClient {
     return res.data.tasks;
   }
 
-  async getById(id: TaskId): Promise<Task | null> {
+  async getById(id: number): Promise<Task | null> {
     try {
       const res = await this.http.get<{ task: Task }>(`/api/tasks/${id}`);
       return res.data.task;
