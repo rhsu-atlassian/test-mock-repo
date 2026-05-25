@@ -9,6 +9,7 @@ export interface ExecutionContext {
   readonly correlationId: string;
   readonly startedAt: Date;
   readonly timeoutMs: number;
+  readonly featureFlags: ReadonlyArray<string>;
 }
 
 export interface ContextAwareLogger {
