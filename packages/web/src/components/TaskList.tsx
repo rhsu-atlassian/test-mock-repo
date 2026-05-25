@@ -18,7 +18,7 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
 
 export function TaskList({ tasks, filterStatus }: TaskListProps): React.ReactElement {
   const visible = filterStatus ? tasks.filter((t) => t.status === filterStatus) : tasks;
-  const sorted = visible.sort((a, b) => b.priority - a.priority);
+  const sorted = visible.slice().sort((a, b) => b.priority - a.priority);
 
   return (
     <ul className="task-list">
